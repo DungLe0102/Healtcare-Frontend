@@ -44,6 +44,18 @@ export default function ForgotPassword() {
     }
   };
 
+  const handleResendOTP = async () => {
+    setLoading(true);
+    try {
+      await authApi.resendOtp({ email });
+      message.success('Mã OTP mới đã được gửi đến email của bạn!');
+    } catch (error: any) {
+      message.error(error.response?.data?.detail || 'Có lỗi xảy ra, vui lòng thử lại.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleResetPassword = async (values: { password: string }) => {
     setLoading(true);
     try {
@@ -103,8 +115,11 @@ export default function ForgotPassword() {
               <Input prefix={<KeyOutlined />} placeholder="Mã OTP 6 chữ số" maxLength={6} />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" className="w-full bg-blue-600" loading={loading}>
+              <Button type="primary" htmlType="submit" className="w-full bg-blue-600 mb-2" loading={loading}>
                 Xác nhận
+              </Button>
+              <Button type="default" className="w-full" onClick={() => handleResendOTP()} loading={loading}>
+                Gửi lại OTP
               </Button>
             </Form.Item>
           </Form>
