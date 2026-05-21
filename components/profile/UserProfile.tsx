@@ -2,8 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, Form, Input, Button, Typography, message, Tabs } from 'antd';
-import { UserOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, LockOutlined, SolutionOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { authApi } from '@/api/auth';
+import PatientProfileForm from './PatientProfileForm';
+import PatientConsentForm from './PatientConsentForm';
 
 const { Title } = Typography;
 
@@ -11,22 +13,24 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(false);
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    setUserRole(localStorage.getItem('user_role'));
     fetchProfile();
   }, []);
 
-  const fetchProfile = async () => {
+  async function fetchProfile() {
     try {
       const data = await authApi.getMe();
       profileForm.setFieldsValue({
         email: data.email,
         full_name: data.full_name,
       });
-    } catch (error: any) {
+    } catch (error) {
       message.error('Không thể tải thông tin người dùng.');
     }
-  };
+  }
 
   const onUpdateProfile = async (values: any) => {
     setLoading(true);
@@ -121,7 +125,19 @@ export default function UserProfile() {
                 </Button>
               </Form>
             )
-          }
+          },
+          ...(userRole === 'PATIENT' ? [
+            {
+              key: '3',
+              label: <span><SolutionOutlined /> Hồ sơ y tế</span>,
+              children: <PatientProfileForm />
+            },
+            {
+              key: '4',
+              label: <span><SafetyCertificateOutlined /> Quyền riêng tư</span>,
+              children: <PatientConsentForm />
+            }
+          ] : [])
         ]} />
       </Card>
     </div>

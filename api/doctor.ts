@@ -20,6 +20,11 @@ export interface Schedule {
   max_patients: number;
   current_booked: number;
   status: string;
+  room?: {
+    room_id: string;
+    room_number: string;
+    room_type: string;
+  };
 }
 
 export const doctorApi = {

@@ -10,7 +10,8 @@ import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
   IdcardOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -71,6 +72,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: <CalendarOutlined style={{ fontSize: '18px' }} />,
       label: <Link href="/admin/schedules">Quản lý Lịch Khám</Link>,
     },
+    {
+      key: '/admin/patients',
+      icon: <TeamOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/patients">Quản lý Bệnh Nhân</Link>,
+    },
   ];
 
   // Determine selected menu key based on pathname
@@ -81,6 +87,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     selectedKey = '/admin/doctors';
   } else if (pathname.startsWith('/admin/schedules')) {
     selectedKey = '/admin/schedules';
+  } else if (pathname.startsWith('/admin/patients')) {
+    selectedKey = '/admin/patients';
   }
 
   return (

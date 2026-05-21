@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Typography, message } from 'antd';
+import { Form, Input, Button, Card, Typography, App } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { authApi } from '@/api/auth';
+import { getErrorMessage } from '@/utils/errorHandler';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -11,6 +12,7 @@ const { Title } = Typography;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const { message } = App.useApp();
   const router = useRouter();
 
   const onFinish = async (values: any) => {
@@ -31,11 +33,13 @@ export default function Login() {
       // Redirect based on role
       if (response.role === 'ADMIN') {
         router.push('/admin'); 
+      } else if (response.role === 'PATIENT') {
+        router.push('/profile');
       } else {
         router.push('/dashboard'); 
       }
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      message.error(getErrorMessage(error, 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.'));
     } finally {
       setLoading(false);
     }

@@ -155,11 +155,12 @@ export default function ScheduleManagement() {
     },
     { 
       title: 'Phòng', 
-      dataIndex: 'room_id', 
-      key: 'room_id',
-      render: (roomId: string) => {
-        // Find room across all departments if needed, but for now just show a short UUID
-        return <span className="text-gray-500 text-xs">{roomId.substring(0, 8)}...</span>;
+      key: 'room',
+      render: (_: any, record: Schedule) => {
+        if (record.room) {
+          return <span className="font-medium text-blue-600">{record.room.room_number}</span>;
+        }
+        return <span className="text-gray-500 text-xs">{record.room_id.substring(0, 8)}...</span>;
       }
     },
     { 
