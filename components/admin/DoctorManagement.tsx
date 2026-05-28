@@ -5,6 +5,7 @@ import { Card, Table, Button, Tag, Space, Modal, Form, Input, Select, InputNumbe
 import { PlusOutlined, EditOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
 import { doctorApi, Doctor } from '@/api/doctor';
 import { departmentApi, Department } from '@/api/department';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const { Option } = Select;
 
@@ -20,8 +21,10 @@ export default function DoctorManagement() {
   // Filters
   const [search, setSearch] = useState<string>('');
   const [departmentId, setDepartmentId] = useState<string | undefined>(undefined);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     fetchDepartments();
   }, []);
 
@@ -85,7 +88,7 @@ export default function DoctorManagement() {
       setIsModalOpen(false);
       fetchDoctors();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Thao tác thất bại');
+      message.error(getErrorMessage(error, 'Thao tác thất bại'));
     }
   };
 
@@ -95,7 +98,7 @@ export default function DoctorManagement() {
       message.success('Đã vô hiệu hóa bác sĩ thành công');
       fetchDoctors();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Xóa thất bại');
+      message.error(getErrorMessage(error, 'Xóa thất bại'));
     }
   };
 
@@ -151,6 +154,8 @@ export default function DoctorManagement() {
     },
   ];
 
+  if (!isMounted) return null;
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <Card 
@@ -171,6 +176,7 @@ export default function DoctorManagement() {
             allowClear
           />
           <Select
+            virtual={false}
             placeholder="Lọc theo Khoa/Phòng"
             value={departmentId}
             onChange={(value) => setDepartmentId(value)}
@@ -200,6 +206,7 @@ export default function DoctorManagement() {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={600}
+        forceRender
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
@@ -216,7 +223,7 @@ export default function DoctorManagement() {
           </Form.Item>
           
           <Form.Item name="department_id" label="Khoa/Phòng">
-            <Select placeholder="Chọn khoa/phòng" allowClear>
+            <Select placeholder="Chọn khoa/phòng" allowClear virtual={false}>
               {departments.map((dep) => (
                 <Option key={dep.department_id} value={dep.department_id}>
                   {dep.department_name}

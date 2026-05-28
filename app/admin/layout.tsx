@@ -11,7 +11,15 @@ import {
   MenuFoldOutlined,
   IdcardOutlined,
   CalendarOutlined,
-  TeamOutlined
+  TeamOutlined,
+  BankOutlined,
+  PayCircleOutlined,
+  MedicineBoxOutlined,
+  DatabaseOutlined,
+  BellOutlined,
+  BarChartOutlined,
+  SafetyOutlined,
+  ShoppingCartOutlined
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -68,6 +76,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       label: <Link href="/admin/doctors">Quản lý Bác Sĩ</Link>,
     },
     {
+      key: '/admin/services',
+      icon: <MedicineBoxOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/services">Quản lý Dịch vụ</Link>,
+    },
+    {
+      key: '/admin/medications',
+      icon: <MedicineBoxOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/medications">Quản lý Thuốc</Link>,
+    },
+    {
+      key: '/admin/inventory',
+      icon: <DatabaseOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/inventory">Quản lý Lô Thuốc</Link>,
+    },
+    {
       key: '/admin/schedules',
       icon: <CalendarOutlined style={{ fontSize: '18px' }} />,
       label: <Link href="/admin/schedules">Quản lý Lịch Khám</Link>,
@@ -77,6 +100,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: <TeamOutlined style={{ fontSize: '18px' }} />,
       label: <Link href="/admin/patients">Quản lý Bệnh Nhân</Link>,
     },
+    {
+      key: '/admin/notifications',
+      icon: <BellOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/notifications">Hỗ trợ & Thông báo</Link>,
+    },
+    {
+      key: '/admin/appointments',
+      icon: <DashboardOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/appointments">Quản lý Cuộc Hẹn</Link>,
+    },
+    {
+      key: '/admin/reports',
+      icon: <BarChartOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/reports">Báo cáo & Thống kê</Link>,
+    },
+    {
+      key: '/admin/audit-logs',
+      icon: <SafetyOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/audit-logs">Nhật ký Hệ thống</Link>,
+    },
+    {
+      key: '/admin/orders',
+      icon: <ShoppingCartOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/orders">Quản lý Đơn Hàng</Link>,
+    },
+    {
+      key: '/admin/billing',
+      icon: <BankOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/billing">Quản lý Thu Ngân</Link>,
+    },
+    {
+      key: '/admin/payouts',
+      icon: <PayCircleOutlined style={{ fontSize: '18px' }} />,
+      label: <Link href="/admin/payouts">Lương Bác Sĩ</Link>,
+    },
   ];
 
   // Determine selected menu key based on pathname
@@ -85,10 +143,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     selectedKey = '/admin/departments';
   } else if (pathname.startsWith('/admin/doctors')) {
     selectedKey = '/admin/doctors';
+  } else if (pathname.startsWith('/admin/services')) {
+    selectedKey = '/admin/services';
+  } else if (pathname.startsWith('/admin/medications')) {
+    selectedKey = '/admin/medications';
+  } else if (pathname.startsWith('/admin/inventory')) {
+    selectedKey = '/admin/inventory';
   } else if (pathname.startsWith('/admin/schedules')) {
     selectedKey = '/admin/schedules';
   } else if (pathname.startsWith('/admin/patients')) {
     selectedKey = '/admin/patients';
+  } else if (pathname.startsWith('/admin/notifications')) {
+    selectedKey = '/admin/notifications';
+  } else if (pathname.startsWith('/admin/appointments')) {
+    selectedKey = '/admin/appointments';
+  } else if (pathname.startsWith('/admin/reports')) {
+    selectedKey = '/admin/reports';
+  } else if (pathname.startsWith('/admin/audit-logs')) {
+    selectedKey = '/admin/audit-logs';
+  } else if (pathname.startsWith('/admin/orders')) {
+    selectedKey = '/admin/orders';
+  } else if (pathname.startsWith('/admin/billing')) {
+    selectedKey = '/admin/billing';
+  } else if (pathname.startsWith('/admin/payouts')) {
+    selectedKey = '/admin/payouts';
   }
 
   return (

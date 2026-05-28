@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Button, Switch, message, Spin, Alert, Typography } from 'antd';
 import { patientApi, ConsentCreate } from '@/api/patient';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const { Text, Paragraph } = Typography;
 
@@ -25,11 +26,11 @@ export default function PatientConsentForm() {
     try {
       setFetching(true);
       const profile = await patientApi.getMyProfile();
-      if (profile && profile.id) {
-        setPatientId(profile.id);
+      if (profile && profile.patient_id) {
+        setPatientId(profile.patient_id);
         
         // Fetch all consents to determine current status
-        const history = await patientApi.getPatientConsents(profile.id);
+        const history = await patientApi.getPatientConsents(profile.patient_id);
         
         // Find latest status for each type
         const latestConsents = { DATA_PROCESSING: false, RESEARCH: false };
@@ -76,7 +77,7 @@ export default function PatientConsentForm() {
       // Update local state
       setConsents(prev => ({ ...prev, [type]: isGranted }));
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Thao tác thất bại');
+      message.error(getErrorMessage(error, 'Thao tác thất bại'));
     } finally {
       setLoading(false);
     }

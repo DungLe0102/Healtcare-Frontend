@@ -549,6 +549,7 @@ export default function DepartmentManagement() {
         open={isEditModalOpen}
         onCancel={() => setIsEditModalOpen(false)}
         footer={null}
+        forceRender
       >
         <Alert
           description={
@@ -665,6 +666,7 @@ export default function DepartmentManagement() {
         open={isRoomModalOpen}
         onCancel={() => setIsRoomModalOpen(false)}
         footer={null}
+        forceRender
       >
         <Form form={roomForm} layout="vertical" onFinish={handleSaveRoom}>
           <Form.Item 

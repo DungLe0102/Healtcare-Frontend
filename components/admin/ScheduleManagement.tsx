@@ -6,6 +6,7 @@ import { CalendarOutlined, SearchOutlined, PlusOutlined, EditOutlined, DeleteOut
 import { doctorApi, Schedule, Doctor } from '@/api/doctor';
 import { departmentApi, Department } from '@/api/department';
 import dayjs from 'dayjs';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -15,6 +16,7 @@ export default function ScheduleManagement() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [allRooms, setAllRooms] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(false);
   const { message } = App.useApp();
@@ -23,6 +25,7 @@ export default function ScheduleManagement() {
   const [filterDoctorId, setFilterDoctorId] = useState<string | undefined>(undefined);
   const [filterDate, setFilterDate] = useState<string | undefined>(undefined);
   const [filterAvailableOnly, setFilterAvailableOnly] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +36,7 @@ export default function ScheduleManagement() {
   const formDoctorId = Form.useWatch('doctor_id', form);
 
   useEffect(() => {
+    setIsMounted(true);
     fetchDoctors();
     fetchDepartments();
   }, []);
@@ -65,6 +69,11 @@ export default function ScheduleManagement() {
     try {
       const data = await departmentApi.getDepartments(false);
       setDepartments(data);
+      
+      // Fetch all rooms from all departments to map room_id
+      const roomsPromises = data.map(dep => departmentApi.getRoomsByDepartment(dep.department_id));
+      const roomsArrays = await Promise.all(roomsPromises);
+      setAllRooms(roomsArrays.flat());
     } catch (error) {}
   };
 
@@ -129,7 +138,7 @@ export default function ScheduleManagement() {
       setIsModalOpen(false);
       fetchSchedules();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Thao tác thất bại');
+      message.error(getErrorMessage(error, 'Thao tác thất bại'));
     }
   };
 
@@ -139,7 +148,7 @@ export default function ScheduleManagement() {
       message.success('Đã hủy lịch khám thành công');
       fetchSchedules();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Hủy thất bại');
+      message.error(getErrorMessage(error, 'Hủy thất bại'));
     }
   };
 
@@ -154,11 +163,27 @@ export default function ScheduleManagement() {
       }
     },
     { 
+      title: 'Khoa',
+      key: 'department',
+      render: (_: any, record: Schedule) => {
+        const doc = doctors.find(d => d.doctor_id === record.doctor_id);
+        if (doc && doc.department_id) {
+          const dep = departments.find(d => d.department_id === doc.department_id);
+          return dep ? <span className="font-medium text-purple-600">{dep.department_name || 'Khoa'}</span> : null;
+        }
+        return null;
+      }
+    },
+    { 
       title: 'Phòng', 
       key: 'room',
       render: (_: any, record: Schedule) => {
         if (record.room) {
           return <span className="font-medium text-blue-600">{record.room.room_number}</span>;
+        }
+        const room = allRooms.find(r => r.room_id === record.room_id);
+        if (room) {
+          return <span className="font-medium text-blue-600">{room.room_number}</span>;
         }
         return <span className="text-gray-500 text-xs">{record.room_id.substring(0, 8)}...</span>;
       }
@@ -210,6 +235,8 @@ export default function ScheduleManagement() {
     },
   ];
 
+  if (!isMounted) return null;
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <Card 
@@ -228,6 +255,7 @@ export default function ScheduleManagement() {
             className="w-64"
             allowClear
             showSearch
+            virtual={false}
             filterOption={(input, option) =>
               (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
             }
@@ -251,6 +279,7 @@ export default function ScheduleManagement() {
             value={filterAvailableOnly}
             onChange={(value) => setFilterAvailableOnly(value)}
             className="w-48"
+            virtual={false}
           >
             <Option value={false}>Tất cả lịch khám</Option>
             <Option value={true}>Chỉ lịch còn trống</Option>
@@ -279,6 +308,7 @@ export default function ScheduleManagement() {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={600}
+        forceRender
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="doctor_id" label="Bác sĩ" rules={[{ required: true, message: 'Vui lòng chọn bác sĩ' }]}>
@@ -286,6 +316,7 @@ export default function ScheduleManagement() {
               placeholder="Chọn bác sĩ" 
               showSearch 
               disabled={!!editingSchedule}
+              virtual={false}
               filterOption={(input, option) =>
                 (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
               }
@@ -306,6 +337,7 @@ export default function ScheduleManagement() {
                     : "Chọn phòng khám"
               }
               disabled={!formDoctorId || rooms.length === 0}
+              virtual={false}
             >
               {rooms.map(room => (
                 <Option key={room.room_id} value={room.room_id}>

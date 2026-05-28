@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Table, Button, Tag, Space, Modal, Form, Input, DatePicker, Select, App, Descriptions, Divider, Popconfirm, Tabs } from 'antd';
 import { PlusOutlined, SearchOutlined, EyeOutlined, EditOutlined, DeleteOutlined, CreditCardOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { patientApi, PatientResponse, PatientWithBHYT, ConsentResponse, BHYTRecord } from '@/api/patient';
+import { medicalRecordApi, MedicalRecord } from '@/api/medical_record';
 import dayjs from 'dayjs';
 import { getErrorMessage } from '@/utils/errorHandler';
 
@@ -15,17 +16,18 @@ export default function PatientManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isBhytModalOpen, setIsBhytModalOpen] = useState(false);
-  
+
   const [editingPatient, setEditingPatient] = useState<PatientResponse | null>(null);
   const [editingBhyt, setEditingBhyt] = useState<any | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<PatientWithBHYT | null>(null);
   const [patientConsents, setPatientConsents] = useState<ConsentResponse[]>([]);
+  const [patientMedicalRecords, setPatientMedicalRecords] = useState<MedicalRecord[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
-  
+
   const [form] = Form.useForm();
   const [bhytForm] = Form.useForm();
   const { message } = App.useApp();
-  
+
   // Filters and Pagination
   const [search, setSearch] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,7 +80,7 @@ export default function PatientManagement() {
         ...values,
         dob: values.dob ? values.dob.format('YYYY-MM-DD') : undefined,
       };
-      
+
       if (editingPatient) {
         await patientApi.updatePatient(editingPatient.patient_id, payload);
         message.success('Cập nhật hồ sơ bệnh nhân thành công');
@@ -88,13 +90,13 @@ export default function PatientManagement() {
       }
       setIsModalOpen(false);
       fetchPatients(currentPage, search);
-      
+
       // Update selected patient detail if it's currently open
       if (isDetailModalOpen && selectedPatient && editingPatient && (selectedPatient.patient_id === editingPatient.patient_id)) {
         handleViewDetails(selectedPatient.patient_id);
       }
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Thao tác thất bại');
+      message.error(getErrorMessage(error, 'Thao tác thất bại'));
     }
   };
 
@@ -114,12 +116,19 @@ export default function PatientManagement() {
     try {
       const data = await patientApi.getPatientById(patientId);
       setSelectedPatient(data);
-      
+
       try {
         const consents = await patientApi.getPatientConsents(patientId);
         setPatientConsents(consents);
       } catch (cErr) {
         console.error("Lỗi khi tải đồng thuận", cErr);
+      }
+
+      try {
+        const records = await medicalRecordApi.getRecordsByPatient(patientId);
+        setPatientMedicalRecords(records);
+      } catch (mErr) {
+        console.error("Lỗi khi tải bệnh án", mErr);
       }
 
     } catch (error) {
@@ -186,20 +195,20 @@ export default function PatientManagement() {
   };
 
   const columns = [
-    { 
-      title: 'Họ và Tên', 
+    {
+      title: 'Họ và Tên',
       key: 'full_name',
       render: (_: any, record: PatientResponse) => <span className="font-medium">{`${record.last_name} ${record.first_name}`}</span>
     },
-    { 
-      title: 'Ngày sinh', 
-      dataIndex: 'dob', 
+    {
+      title: 'Ngày sinh',
+      dataIndex: 'dob',
       key: 'dob',
       render: (dob: string) => dob ? dayjs(dob).format('DD/MM/YYYY') : '---'
     },
-    { 
-      title: 'Giới tính', 
-      dataIndex: 'gender', 
+    {
+      title: 'Giới tính',
+      dataIndex: 'gender',
       key: 'gender',
       render: (gender: string) => {
         if (gender === 'MALE') return 'Nam';
@@ -214,18 +223,18 @@ export default function PatientManagement() {
       key: 'actions',
       render: (_: any, record: PatientResponse) => (
         <Space size="middle">
-          <Button 
+          <Button
             type="default"
-            icon={<EyeOutlined />} 
-            onClick={() => handleViewDetails(record.patient_id)} 
-            size="small" 
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record.patient_id)}
+            size="small"
             title="Xem chi tiết"
           />
-          <Button 
-            icon={<EditOutlined />} 
-            onClick={() => handleOpenModal(record)} 
-            size="small" 
-            title="Chỉnh sửa" 
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleOpenModal(record)}
+            size="small"
+            title="Chỉnh sửa"
           />
           <Popconfirm
             title="Xóa hồ sơ bệnh nhân?"
@@ -244,8 +253,8 @@ export default function PatientManagement() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <Card 
-        title={<span className="text-xl font-semibold">Quản lý Bệnh Nhân (Admin)</span>} 
+      <Card
+        title={<span className="text-xl font-semibold">Quản lý Bệnh Nhân (Admin)</span>}
         extra={
           <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
             Tạo Bệnh Nhân
@@ -263,12 +272,12 @@ export default function PatientManagement() {
           />
         </div>
 
-        <Table 
-          columns={columns} 
-          dataSource={patients} 
-          rowKey="patient_id" 
+        <Table
+          columns={columns}
+          dataSource={patients}
+          rowKey="patient_id"
           loading={loading}
-          pagination={{ 
+          pagination={{
             current: currentPage,
             pageSize: pageSize,
             total: patients.length < pageSize ? (currentPage - 1) * pageSize + patients.length : currentPage * pageSize + 1
@@ -328,25 +337,25 @@ export default function PatientManagement() {
                         Thêm thẻ BHYT
                       </Button>
                     </div>
-                    
+
                     {selectedPatient.bhyt_records && selectedPatient.bhyt_records.length > 0 ? (
-                      <Table 
-                        dataSource={selectedPatient.bhyt_records} 
-                        rowKey="bhyt_id" 
-                        pagination={false} 
+                      <Table
+                        dataSource={selectedPatient.bhyt_records}
+                        rowKey="bhyt_id"
+                        pagination={false}
                         size="small"
                         columns={[
                           { title: 'Mã BHYT', dataIndex: 'bhyt_code', key: 'bhyt_code', render: val => <span className="font-medium text-blue-600">{val}</span> },
                           { title: 'Mã KCB BĐ', dataIndex: 'registered_hospital_code', key: 'registered_hospital_code' },
-                          { 
-                            title: 'Hiệu lực', 
-                            key: 'validity', 
+                          {
+                            title: 'Hiệu lực',
+                            key: 'validity',
                             render: (_: any, record: any) => (
-                               <span className="text-xs">
-                                 {record.valid_from ? dayjs(record.valid_from).format('DD/MM/YY') : ''} - 
-                                 {record.valid_to ? dayjs(record.valid_to).format('DD/MM/YY') : ''}
-                               </span>
-                            ) 
+                              <span className="text-xs">
+                                {record.valid_from ? dayjs(record.valid_from).format('DD/MM/YY') : ''} -
+                                {record.valid_to ? dayjs(record.valid_to).format('DD/MM/YY') : ''}
+                              </span>
+                            )
                           },
                           {
                             title: 'Trạng thái',
@@ -380,7 +389,7 @@ export default function PatientManagement() {
                               <Button type="link" size="small" onClick={() => handleOpenBhytModal(record)}>Sửa</Button>
                             )
                           }
-                        ]} 
+                        ]}
                       />
                     ) : (
                       <div className="text-gray-500 italic px-2 bg-gray-50 py-8 text-center rounded border border-gray-100">
@@ -399,33 +408,84 @@ export default function PatientManagement() {
                       <span className="font-semibold text-gray-700">Lịch sử cấp quyền/Đồng thuận (Audit Trail)</span>
                     </div>
                     {patientConsents.length > 0 ? (
-                      <Table 
-                        dataSource={patientConsents} 
-                        rowKey="consent_id" 
-                        pagination={false} 
+                      <Table
+                        dataSource={patientConsents}
+                        rowKey="consent_id"
+                        pagination={false}
                         size="small"
                         columns={[
-                          { 
-                            title: 'Thời gian', 
-                            dataIndex: 'timestamp', 
+                          {
+                            title: 'Thời gian',
+                            dataIndex: 'timestamp',
                             key: 'timestamp',
                             render: (val: string) => dayjs(val).format('DD/MM/YYYY HH:mm:ss')
                           },
                           { title: 'Loại đồng thuận', dataIndex: 'consent_type', key: 'consent_type' },
-                          { 
-                            title: 'Trạng thái', 
-                            dataIndex: 'is_granted', 
+                          {
+                            title: 'Trạng thái',
+                            dataIndex: 'is_granted',
                             key: 'is_granted',
-                            render: (val: boolean) => val 
-                              ? <Tag color="blue">Đã cấp quyền (Granted)</Tag> 
+                            render: (val: boolean) => val
+                              ? <Tag color="blue">Đã cấp quyền (Granted)</Tag>
                               : <Tag color="red">Rút quyền (Revoked)</Tag>
                           },
                           { title: 'IP Address', dataIndex: 'ip_address', key: 'ip_address', render: val => val || '---' },
-                        ]} 
+                        ]}
                       />
                     ) : (
                       <div className="text-gray-500 italic px-2 bg-gray-50 py-8 text-center rounded border border-gray-100">
                         Chưa có lịch sử ký đồng thuận.
+                      </div>
+                    )}
+                  </div>
+                ),
+              },
+              {
+                key: '4',
+                label: 'Lịch sử Bệnh án',
+                children: (
+                  <div>
+                    <div className="mt-2 mb-4">
+                      <span className="font-semibold text-gray-700">Lịch sử Khám bệnh & Điều trị</span>
+                    </div>
+                    {patientMedicalRecords.length > 0 ? (
+                      <Table
+                        dataSource={patientMedicalRecords}
+                        rowKey="record_id"
+                        pagination={false}
+                        size="small"
+                        columns={[
+                          {
+                            title: 'Ngày khám',
+                            dataIndex: 'created_at',
+                            key: 'created_at',
+                            render: (val: string) => <span className="font-medium text-blue-600">{dayjs(val).format('DD/MM/YYYY')}</span>
+                          },
+                          { title: 'Chẩn đoán', dataIndex: 'diagnosis', key: 'diagnosis' },
+                          { title: 'ICD-10', dataIndex: 'icd10_code', key: 'icd10_code', render: val => val ? <Tag>{val}</Tag> : '---' },
+                          {
+                            title: 'Trạng thái',
+                            key: 'status',
+                            render: (_: any, record: MedicalRecord) => record.is_signed 
+                              ? <Tag color="success" icon={<CheckCircleOutlined />}>Đã ký số</Tag> 
+                              : <Tag color="warning">Bản nháp</Tag>
+                          }
+                        ]}
+                        expandable={{
+                          expandedRowRender: (record: MedicalRecord) => (
+                            <div className="bg-gray-50 p-4 rounded text-sm border border-gray-200">
+                              <p className="mb-2"><strong>Triệu chứng:</strong> {record.symptoms || 'Không ghi nhận'}</p>
+                              <p className="mb-2"><strong>Kế hoạch điều trị:</strong> {record.treatment_plan || 'Không ghi nhận'}</p>
+                              {record.is_signed && (
+                                <p className="text-gray-500 text-xs mt-2 border-t pt-2">Ký số lúc: {dayjs(record.signed_at).format('DD/MM/YYYY HH:mm:ss')}</p>
+                              )}
+                            </div>
+                          ),
+                        }}
+                      />
+                    ) : (
+                      <div className="text-gray-500 italic px-2 bg-gray-50 py-8 text-center rounded border border-gray-100">
+                        Bệnh nhân chưa có lịch sử khám bệnh.
                       </div>
                     )}
                   </div>
@@ -455,7 +515,7 @@ export default function PatientManagement() {
               <Input placeholder="VD: Văn A" />
             </Form.Item>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="dob" label="Ngày sinh" rules={[{ required: true, message: 'Vui lòng chọn ngày sinh' }]}>
               <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Chọn ngày sinh" />
@@ -468,7 +528,7 @@ export default function PatientManagement() {
               </Select>
             </Form.Item>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <Form.Item name="phone" label="Số điện thoại">
               <Input placeholder="Nhập số điện thoại" />
@@ -500,9 +560,9 @@ export default function PatientManagement() {
         width={500}
       >
         <Form form={bhytForm} layout="vertical" onFinish={handleBhytSubmit} className="mt-4">
-          <Form.Item 
-            name="bhyt_code" 
-            label="Mã thẻ BHYT (15 ký tự)" 
+          <Form.Item
+            name="bhyt_code"
+            label="Mã thẻ BHYT (15 ký tự)"
             rules={[
               { required: !editingBhyt, message: 'Vui lòng nhập mã thẻ BHYT' },
               { len: 15, message: 'Mã BHYT phải có chính xác 15 ký tự' }
@@ -511,26 +571,26 @@ export default function PatientManagement() {
             <Input placeholder="VD: DN1234567890123" disabled={!!editingBhyt} />
           </Form.Item>
 
-          <Form.Item 
-            name="registered_hospital_code" 
-            label="Mã cơ sở KCB ban đầu" 
+          <Form.Item
+            name="registered_hospital_code"
+            label="Mã cơ sở KCB ban đầu"
             rules={[{ required: true, message: 'Vui lòng nhập mã bệnh viện' }]}
           >
             <Input placeholder="VD: 01001" />
           </Form.Item>
 
           <div className="grid grid-cols-2 gap-4">
-            <Form.Item 
-              name="valid_from" 
-              label="Hiệu lực từ" 
+            <Form.Item
+              name="valid_from"
+              label="Hiệu lực từ"
               rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu' }]}
             >
               <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Từ ngày" />
             </Form.Item>
-            
-            <Form.Item 
-              name="valid_to" 
-              label="Đến ngày" 
+
+            <Form.Item
+              name="valid_to"
+              label="Đến ngày"
               rules={[{ required: true, message: 'Vui lòng chọn ngày hết hạn' }]}
             >
               <DatePicker className="w-full" format="DD/MM/YYYY" placeholder="Đến ngày" />

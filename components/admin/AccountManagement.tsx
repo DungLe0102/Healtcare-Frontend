@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Table, Button, Tag, Space, Modal, Form, Input, Select, App } from 'antd';
 import { PlusOutlined, EditOutlined, StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { authApi } from '@/api/auth';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const { Option } = Select;
 
@@ -57,7 +58,7 @@ export default function AccountManagement() {
       setIsModalOpen(false);
       fetchAccounts();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Thao tác thất bại');
+      message.error(getErrorMessage(error, 'Thao tác thất bại'));
     }
   };
 
@@ -71,7 +72,7 @@ export default function AccountManagement() {
       message.success('Đã cập nhật trạng thái');
       fetchAccounts();
     } catch (error: any) {
-      message.error(error.response?.data?.detail || 'Cập nhật thất bại');
+      message.error(getErrorMessage(error, 'Cập nhật thất bại'));
     }
   };
 
@@ -131,6 +132,7 @@ export default function AccountManagement() {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        forceRender
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>

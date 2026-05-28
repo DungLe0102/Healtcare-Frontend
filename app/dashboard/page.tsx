@@ -41,7 +41,23 @@ export default function DashboardPage() {
           <p><strong>Vai trò của bạn:</strong> {role === 'PATIENT' ? 'Bệnh nhân' : role}</p>
         </div>
 
-        <Button danger type="primary" onClick={handleLogout}>
+        <div className="flex gap-4 mb-6">
+          <Button type="primary" onClick={() => router.push('/profile')}>
+            Hồ sơ cá nhân
+          </Button>
+          {role === 'PATIENT' && (
+            <Button type="primary" className="bg-green-600 hover:bg-green-700" onClick={() => router.push('/booking')}>
+              Đặt lịch khám
+            </Button>
+          )}
+          {role === 'ADMIN' && (
+            <Button type="default" onClick={() => router.push('/admin')}>
+              Quản trị Admin
+            </Button>
+          )}
+        </div>
+
+        <Button danger type="default" onClick={handleLogout}>
           Đăng xuất
         </Button>
       </Card>
