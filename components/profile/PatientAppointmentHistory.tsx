@@ -47,14 +47,11 @@ export default function PatientAppointmentHistory() {
             <div><strong>Thời gian:</strong> {dayjs(detail.appointment_date).format('HH:mm')} - {dayjs(detail.appointment_date).add(30, 'minute').format('HH:mm')}</div>
             <div><strong>Trạng thái:</strong> {getStatusTag(detail.status)}</div>
             <div><strong>Triệu chứng:</strong> {detail.symptoms || 'Không có'}</div>
-            {detail.doctor && (
+            {(detail.doctor_name || detail.doctor) && (
               <div>
-                <strong>Bác sĩ:</strong> {detail.doctor.first_name} {detail.doctor.last_name} 
-                {detail.doctor.specialization && ` - ${detail.doctor.specialization}`}
+                <strong>Bác sĩ:</strong> {detail.doctor_name || `${detail.doctor?.first_name} ${detail.doctor?.last_name}`} 
+                {(detail.specialization || detail.doctor?.specialization) && ` - ${detail.specialization || detail.doctor?.specialization}`}
               </div>
-            )}
-            {detail.room && (
-              <div><strong>Phòng khám:</strong> {detail.room.room_number}</div>
             )}
           </div>
         ),
@@ -96,6 +93,17 @@ export default function PatientAppointmentHistory() {
       key: 'time',
       render: (_: any, record: any) => (
         <Text>{dayjs(record.appointment_date).format('HH:mm')} - {dayjs(record.appointment_date).add(30, 'minute').format('HH:mm')}</Text>
+      )
+    },
+    {
+      title: 'Bác sĩ',
+      dataIndex: 'doctor_name',
+      key: 'doctor_name',
+      render: (text: string, record: any) => (
+        <div>
+          <Text strong>{text || 'Chưa phân công'}</Text>
+          {record.specialization && <span className="text-xs text-blue-500 block">{record.specialization}</span>}
+        </div>
       )
     },
     {

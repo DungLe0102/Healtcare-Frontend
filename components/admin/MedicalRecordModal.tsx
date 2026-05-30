@@ -117,7 +117,7 @@ export default function MedicalRecordModal({ isOpen, onClose, appointment, onSuc
           // Sign
           if (currentRecordId) {
             await medicalRecordApi.signRecord(currentRecordId, {
-              doctor_signature_hash: `signed-by-${appointment.doctor_id}-${Date.now()}` // Mock signature hash
+              doctor_secret: `secret-mock-${appointment.doctor_id || 'doctor'}-${Date.now()}` // Mock signature secret (min 8 chars)
             });
             
             // Mark appointment as COMPLETED
@@ -173,11 +173,11 @@ export default function MedicalRecordModal({ isOpen, onClose, appointment, onSuc
         <div className="py-4">
           <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100 flex gap-4 text-sm">
             <div className="flex-1">
-              <div><Text type="secondary">Bệnh nhân:</Text> <Text strong>{appointment?.patient?.full_name || appointment?.patient_id}</Text></div>
-              <div><Text type="secondary">Ngày khám:</Text> <Text strong>{dayjs(appointment?.start_time).format('DD/MM/YYYY HH:mm')}</Text></div>
+              <div><Text type="secondary">Bệnh nhân:</Text> <Text strong>{appointment?.patient_name || appointment?.patient_id?.split('-')[0]}</Text></div>
+              <div><Text type="secondary">Ngày khám:</Text> <Text strong>{dayjs(appointment?.appointment_date || appointment?.start_time).format('DD/MM/YYYY HH:mm')}</Text></div>
             </div>
             <div className="flex-1">
-              <div><Text type="secondary">Bác sĩ khám:</Text> <Text strong>{appointment?.doctor?.first_name} {appointment?.doctor?.last_name}</Text></div>
+              <div><Text type="secondary">Bác sĩ khám:</Text> <Text strong>{appointment?.doctor_name || 'Bác sĩ'}</Text></div>
               <div><Text type="secondary">Trạng thái:</Text> <Text strong>{appointment?.status}</Text></div>
             </div>
           </div>

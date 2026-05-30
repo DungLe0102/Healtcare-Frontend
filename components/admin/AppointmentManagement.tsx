@@ -101,7 +101,7 @@ export default function AppointmentManagement() {
   const handleUpdateStatus = (record: any, newStatus: string) => {
     modal.confirm({
       title: 'Xác nhận chuyển trạng thái?',
-      content: `Chuyển trạng thái cuộc hẹn của ${record.patient_id} thành ${newStatus}`,
+      content: `Chuyển trạng thái cuộc hẹn của bệnh nhân ${record.patient_name || record.patient_id?.split('-')[0]} thành ${newStatus}`,
       onOk: async () => {
         try {
           await appointmentApi.updateStatus(record.appointment_id, newStatus);
@@ -146,9 +146,25 @@ export default function AppointmentManagement() {
     },
     {
       title: 'Bệnh nhân',
-      dataIndex: 'patient_id',
-      key: 'patient_id',
-      render: (text: string) => <Text ellipsis style={{ maxWidth: 150 }} title={text}>{text.split('-')[0]}</Text>
+      dataIndex: 'patient_name',
+      key: 'patient_name',
+      render: (text: string, record: any) => (
+        <div>
+          <Text strong>{text || 'Chưa cập nhật'}</Text>
+          <div className="text-xs text-gray-400 font-mono">{record.patient_id?.split('-')[0]}</div>
+        </div>
+      )
+    },
+    {
+      title: 'Bác sĩ',
+      dataIndex: 'doctor_name',
+      key: 'doctor_name',
+      render: (text: string, record: any) => (
+        <div>
+          <Text strong>{text || 'Chưa phân công'}</Text>
+          {record.specialization && <span className="text-xs text-blue-500 block">{record.specialization}</span>}
+        </div>
+      )
     },
     {
       title: 'Triệu chứng',

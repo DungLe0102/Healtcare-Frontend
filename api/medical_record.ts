@@ -34,7 +34,8 @@ export interface MedicalRecordUpdate {
 }
 
 export interface SignRecordRequest {
-  doctor_signature_hash: string;
+  doctor_secret: string;
+  ma_lk?: string;
 }
 
 export const medicalRecordApi = {
