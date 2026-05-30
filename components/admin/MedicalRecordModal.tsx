@@ -22,6 +22,11 @@ export default function MedicalRecordModal({ isOpen, onClose, appointment, onSuc
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [record, setRecord] = useState<MedicalRecord | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen && appointment) {
@@ -133,6 +138,8 @@ export default function MedicalRecordModal({ isOpen, onClose, appointment, onSuc
   };
 
   const isReadOnly = record?.is_signed || appointment?.status === 'COMPLETED' || appointment?.status === 'CANCELLED';
+
+  if (!mounted) return null;
 
   return (
     <Modal
