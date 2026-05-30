@@ -68,13 +68,14 @@ export default function AppointmentManagement() {
         
         const results = await Promise.all(promises);
         results.forEach(res => {
-          if (res && (res.appointments || res.items)) {
-            allAppointments.push(...(res.appointments || res.items || []));
+          const list = res?.appointments || res?.items;
+          if (list) {
+            allAppointments.push(...list);
           }
         });
         
-        // Sort appointments by start_time
-        allAppointments.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+        // Sort appointments by appointment_date
+        allAppointments.sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
         setAppointments(allAppointments);
       }
     } catch (error: any) {
@@ -136,10 +137,10 @@ export default function AppointmentManagement() {
   const columns = [
     {
       title: 'Giờ',
-      dataIndex: 'start_time',
-      key: 'start_time',
-      render: (text: string, record: any) => (
-        <Text strong>{dayjs(text).format('HH:mm')} - {dayjs(record.end_time).format('HH:mm')}</Text>
+      dataIndex: 'appointment_date',
+      key: 'appointment_date',
+      render: (text: string) => (
+        <Text strong>{dayjs(text).format('HH:mm')} - {dayjs(text).add(30, 'minute').format('HH:mm')}</Text>
       )
     },
     {
@@ -163,12 +164,14 @@ export default function AppointmentManagement() {
       title: 'Thao tác',
       key: 'actions',
       render: (_: any, record: any) => {
-        if (record.status === 'SCHEDULED') {
+        if (record.status === 'SCHEDULED' || record.status === 'PENDING_PAYMENT') {
           return (
             <Space>
-              <Button size="small" type="primary" onClick={() => handleUpdateStatus(record, 'IN_PROGRESS')}>
-                Bắt đầu khám
-              </Button>
+              {record.status === 'SCHEDULED' && (
+                <Button size="small" type="primary" onClick={() => handleUpdateStatus(record, 'IN_PROGRESS')}>
+                  Bắt đầu khám
+                </Button>
+              )}
               <Button size="small" danger onClick={() => handleUpdateStatus(record, 'CANCELLED')}>
                 Hủy
               </Button>

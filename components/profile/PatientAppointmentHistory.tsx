@@ -43,8 +43,8 @@ export default function PatientAppointmentHistory() {
         content: (
           <div className="mt-4 flex flex-col gap-3">
             <div><strong>Mã cuộc hẹn:</strong> {detail.appointment_id.split('-')[0]}</div>
-            <div><strong>Ngày khám:</strong> {detail.appointment_date}</div>
-            <div><strong>Thời gian:</strong> {dayjs(detail.start_time).format('HH:mm')} - {dayjs(detail.end_time).format('HH:mm')}</div>
+            <div><strong>Ngày khám:</strong> {dayjs(detail.appointment_date).format('DD/MM/YYYY')}</div>
+            <div><strong>Thời gian:</strong> {dayjs(detail.appointment_date).format('HH:mm')} - {dayjs(detail.appointment_date).add(30, 'minute').format('HH:mm')}</div>
             <div><strong>Trạng thái:</strong> {getStatusTag(detail.status)}</div>
             <div><strong>Triệu chứng:</strong> {detail.symptoms || 'Không có'}</div>
             {detail.doctor && (
@@ -89,13 +89,13 @@ export default function PatientAppointmentHistory() {
       title: 'Ngày khám',
       dataIndex: 'appointment_date',
       key: 'appointment_date',
-      render: (text: string) => <Text strong>{text}</Text>
+      render: (text: string) => <Text strong>{dayjs(text).format('DD/MM/YYYY')}</Text>
     },
     {
       title: 'Thời gian',
       key: 'time',
       render: (_: any, record: any) => (
-        <Text>{dayjs(record.start_time).format('HH:mm')} - {dayjs(record.end_time).format('HH:mm')}</Text>
+        <Text>{dayjs(record.appointment_date).format('HH:mm')} - {dayjs(record.appointment_date).add(30, 'minute').format('HH:mm')}</Text>
       )
     },
     {
