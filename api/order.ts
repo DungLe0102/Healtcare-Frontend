@@ -41,4 +41,20 @@ export const orderApi = {
     const response = await api.post('/api/v1/orders/check-expired');
     return response.data;
   },
+
+  simulateOrderPayment: async (orderId: string, amount: number): Promise<any> => {
+    const payload = {
+      error: 0,
+      message: "Thanh toán đơn hàng thành công",
+      data: [
+        {
+          amount: amount,
+          description: `PAYORD ${orderId}`,
+          reference_number: `FT_SIMULATE_ORD_${Date.now()}`
+        }
+      ]
+    };
+    const response = await api.post('/api/v1/billing/vietqr-webhook', payload);
+    return response.data;
+  },
 };

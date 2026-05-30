@@ -43,6 +43,22 @@ export default function PatientOrders() {
   const [isPharmacyModalOpen, setIsPharmacyModalOpen] = useState(false);
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [simulating, setSimulating] = useState(false);
+
+  const handleSimulateOrderPayment = async () => {
+    if (!selectedOrder) return;
+    setSimulating(true);
+    try {
+      await orderApi.simulateOrderPayment(selectedOrder.order_id, selectedOrder.total_amount);
+      message.success('Thanh toán đơn hàng thành công!');
+      setPayModalOpen(false);
+      fetchOrdersAndData();
+    } catch (error) {
+      message.error('Lỗi mô phỏng thanh toán đơn hàng');
+    } finally {
+      setSimulating(false);
+    }
+  };
 
   const [bhytForm] = Form.useForm();
   const [pharmacyForm] = Form.useForm();
@@ -398,7 +414,7 @@ export default function PatientOrders() {
             {selectedOrder.qr_url ? (
               <div className="text-center py-4">
                 <img src={selectedOrder.qr_url} alt="VietQR" className="w-56 h-56 mx-auto mb-2 border rounded-xl shadow-md" />
-                <Text className="text-xs text-gray-400 block max-w-sm mx-auto">
+                <Text className="text-xs text-gray-400 block max-w-sm mx-auto mb-4">
                   Vui lòng quét mã VietQR bằng ứng dụng ngân hàng của bạn. Đơn hàng sẽ tự động xử lý ngay lập tức khi nhận được khoản tiền chuyển khoản.
                 </Text>
               </div>
@@ -407,6 +423,21 @@ export default function PatientOrders() {
                 Đang xử lý kết nối ngân hàng để lấy mã QR...
               </div>
             )}
+
+            <div className="p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm my-4 text-left">
+              <strong>Dành cho Demo:</strong> Bạn có thể sử dụng nút bên dưới để giả lập ngân hàng đã gửi Webhook thanh toán đơn hàng thành công.
+            </div>
+            
+            <Button 
+              type="primary" 
+              size="large" 
+              block 
+              onClick={handleSimulateOrderPayment} 
+              loading={simulating}
+              className="bg-green-600 hover:bg-green-700 border-green-600"
+            >
+              Mô phỏng thanh toán (Webhook)
+            </Button>
           </div>
         )}
       </Modal>

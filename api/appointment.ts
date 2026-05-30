@@ -46,11 +46,12 @@ export const appointmentApi = {
     // Phải match với payload mong đợi của webhook
     const payload = {
       error: 0,
+      message: "Giao dịch thành công",
       data: [
         {
-          curency: "VND",
           amount: amount,
           description: `PAY ${transactionId}`,
+          reference_number: `FT_SIMULATE_${Date.now()}`
         }
       ]
     };
