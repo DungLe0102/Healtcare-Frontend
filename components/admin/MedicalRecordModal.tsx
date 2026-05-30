@@ -162,7 +162,7 @@ export default function MedicalRecordModal({ isOpen, onClose, appointment, onSuc
         </Space>
       }
     >
-      <Spin spinning={loading} size="large" tip="Đang tải dữ liệu...">
+      <Spin spinning={loading} size="large" description="Đang tải dữ liệu...">
         <div className="py-4">
           <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100 flex gap-4 text-sm">
             <div className="flex-1">
