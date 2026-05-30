@@ -51,7 +51,7 @@ export default function AppointmentManagement() {
       if (selectedDoctor) {
         // Use doctor endpoint if doctor selected
         const res = await appointmentApi.getDoctorAppointments(selectedDoctor, selectedDate, statusFilter);
-        setAppointments(res.items || []);
+        setAppointments(res.appointments || res.items || []);
       } else {
         // Fallback to fetch appointments for all doctors individually due to backend route conflict
         let currentDoctors = doctors;
@@ -63,13 +63,13 @@ export default function AppointmentManagement() {
         const allAppointments: any[] = [];
         const promises = currentDoctors.map(doctor => 
           appointmentApi.getDoctorAppointments(doctor.doctor_id, selectedDate, statusFilter)
-            .catch(() => ({ items: [] }))
+            .catch(() => ({ appointments: [] }))
         );
         
         const results = await Promise.all(promises);
         results.forEach(res => {
-          if (res && res.items) {
-            allAppointments.push(...res.items);
+          if (res && (res.appointments || res.items)) {
+            allAppointments.push(...(res.appointments || res.items || []));
           }
         });
         

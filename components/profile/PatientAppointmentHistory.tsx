@@ -26,7 +26,7 @@ export default function PatientAppointmentHistory() {
       setPatientId(profile.patient_id);
       
       const res = await appointmentApi.getPatientAppointments(profile.patient_id);
-      setAppointments(res.items || []);
+      setAppointments(res.appointments || res.items || []);
     } catch (error: any) {
       message.error(getErrorMessage(error, 'Không thể tải lịch sử cuộc hẹn'));
     } finally {
