@@ -11,10 +11,9 @@ import MedicalRecordModal from './MedicalRecordModal';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const { confirm } = Modal;
 
 export default function AppointmentManagement() {
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,7 +99,7 @@ export default function AppointmentManagement() {
   };
 
   const handleUpdateStatus = (record: any, newStatus: string) => {
-    confirm({
+    modal.confirm({
       title: 'Xác nhận chuyển trạng thái?',
       content: `Chuyển trạng thái cuộc hẹn của ${record.patient_id} thành ${newStatus}`,
       onOk: async () => {
@@ -120,7 +119,9 @@ export default function AppointmentManagement() {
       case 'PENDING_PAYMENT':
         return <Tag color="warning" icon={<ClockCircleOutlined />}>Chờ thanh toán</Tag>;
       case 'SCHEDULED':
-        return <Tag color="processing" icon={<SyncOutlined spin />}>Đã lên lịch</Tag>;
+        return <Tag color="processing" icon={<SyncOutlined spin />} className="border-blue-200">Đã lên lịch</Tag>;
+      case 'CHECKED_IN':
+        return <Tag color="cyan" icon={<SyncOutlined spin />} className="border-cyan-200">Đã báo danh</Tag>;
       case 'IN_PROGRESS':
         return <Tag color="blue" icon={<SyncOutlined spin />}>Đang khám</Tag>;
       case 'COMPLETED':
@@ -164,14 +165,29 @@ export default function AppointmentManagement() {
       title: 'Thao tác',
       key: 'actions',
       render: (_: any, record: any) => {
-        if (record.status === 'SCHEDULED' || record.status === 'PENDING_PAYMENT') {
+        if (record.status === 'PENDING_PAYMENT') {
+          return (
+            <Button size="small" danger onClick={() => handleUpdateStatus(record, 'CANCELLED')}>
+              Hủy
+            </Button>
+          );
+        } else if (record.status === 'SCHEDULED') {
           return (
             <Space>
-              {record.status === 'SCHEDULED' && (
-                <Button size="small" type="primary" onClick={() => handleUpdateStatus(record, 'IN_PROGRESS')}>
-                  Bắt đầu khám
-                </Button>
-              )}
+              <Button size="small" type="primary" onClick={() => handleUpdateStatus(record, 'CHECKED_IN')}>
+                Báo danh
+              </Button>
+              <Button size="small" danger onClick={() => handleUpdateStatus(record, 'CANCELLED')}>
+                Hủy
+              </Button>
+            </Space>
+          );
+        } else if (record.status === 'CHECKED_IN') {
+          return (
+            <Space>
+              <Button size="small" type="primary" className="bg-blue-600 hover:bg-blue-500 border-blue-600" onClick={() => handleUpdateStatus(record, 'IN_PROGRESS')}>
+                Bắt đầu khám
+              </Button>
               <Button size="small" danger onClick={() => handleUpdateStatus(record, 'CANCELLED')}>
                 Hủy
               </Button>
@@ -182,7 +198,7 @@ export default function AppointmentManagement() {
             <Button 
               size="small" 
               type="primary" 
-              className="bg-green-600" 
+              className="bg-green-600 border-green-600 hover:bg-green-500" 
               onClick={() => {
                 setSelectedAppointment(record);
                 setIsRecordModalOpen(true);
