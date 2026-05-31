@@ -100,5 +100,11 @@ export const appointmentApi = {
   markNoShows: async (): Promise<any> => {
     const response = await api.post('/api/v1/appointments/mark-no-shows');
     return response.data;
+  },
+
+  // 10. Bệnh nhân hủy cuộc hẹn
+  cancelAppointment: async (appointmentId: string): Promise<any> => {
+    const response = await api.post(`/api/v1/appointments/${appointmentId}/cancel`);
+    return response.data;
   }
 };

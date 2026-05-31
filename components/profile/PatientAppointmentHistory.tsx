@@ -81,6 +81,33 @@ export default function PatientAppointmentHistory() {
     }
   };
 
+  const handleCancel = (appointmentId: string) => {
+    Modal.confirm({
+      title: 'Xác nhận hủy lịch khám',
+      icon: <ExclamationCircleOutlined className="text-red-500" />,
+      content: (
+        <div className="mt-2">
+          <p>Bạn có chắc chắn muốn hủy cuộc hẹn này không?</p>
+          <p className="text-sm text-gray-500 mt-1">
+            * Đối với lịch đã thanh toán, hệ thống sẽ tự động tạo yêu cầu hoàn tiền.
+          </p>
+        </div>
+      ),
+      okText: 'Xác nhận hủy',
+      okType: 'danger',
+      cancelText: 'Quay lại',
+      onOk: async () => {
+        try {
+          await appointmentApi.cancelAppointment(appointmentId);
+          message.success('Hủy cuộc hẹn thành công');
+          fetchPatientAndAppointments();
+        } catch (error: any) {
+          message.error(getErrorMessage(error, 'Không thể hủy cuộc hẹn'));
+        }
+      }
+    });
+  };
+
   const columns = [
     {
       title: 'Ngày khám',
@@ -116,13 +143,25 @@ export default function PatientAppointmentHistory() {
       title: 'Thao tác',
       key: 'action',
       render: (_: any, record: any) => (
-        <Button 
-          type="link" 
-          icon={<EyeOutlined />} 
-          onClick={() => showDetail(record.appointment_id)}
-        >
-          Chi tiết
-        </Button>
+        <Space size="small">
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />} 
+            onClick={() => showDetail(record.appointment_id)}
+          >
+            Chi tiết
+          </Button>
+          {(record.status === 'PENDING_PAYMENT' || record.status === 'SCHEDULED') && (
+            <Button 
+              type="link" 
+              danger 
+              icon={<CloseCircleOutlined />} 
+              onClick={() => handleCancel(record.appointment_id)}
+            >
+              Hủy lịch
+            </Button>
+          )}
+        </Space>
       )
     }
   ];
