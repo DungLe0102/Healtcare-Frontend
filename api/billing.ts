@@ -115,11 +115,21 @@ export const billingApi = {
     return response.data;
   },
 
-  refundVietQR: async (transactionId: string, amount: number, content: string): Promise<any> => {
+  refundVietQR: async (
+    transactionId: string, 
+    amount: number, 
+    content: string,
+    targetBankCode: string,
+    targetAccountNo: string,
+    targetAccountName?: string
+  ): Promise<any> => {
     const response = await api.post('/api/v1/payments/vietqr-refund', {
       transaction_id: transactionId,
       amount,
       content,
+      target_bank_code: targetBankCode,
+      target_account_no: targetAccountNo,
+      target_account_name: targetAccountName,
     });
     return response.data;
   },

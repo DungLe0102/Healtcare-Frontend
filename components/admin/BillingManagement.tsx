@@ -109,7 +109,14 @@ export default function BillingManagement() {
   const handleRefund = async (values: any) => {
     if (!selectedTransaction || !searchedBill) return;
     try {
-      await billingApi.refundVietQR(selectedTransaction.transaction_id, values.amount, values.content);
+      await billingApi.refundVietQR(
+        selectedTransaction.transaction_id,
+        values.amount,
+        values.content,
+        values.target_bank_code,
+        values.target_account_no,
+        values.target_account_name
+      );
       message.success('Yêu cầu hoàn tiền đã được xử lý!');
       setIsRefundModalOpen(false);
       
@@ -279,7 +286,7 @@ export default function BillingManagement() {
           </Text>
         </div>
         <Form form={refundForm} layout="vertical" onFinish={handleRefund}>
-          <Form.Item name="amount" label="Số tiền hoàn lại (VNĐ)" rules={[{ required: true }]}>
+          <Form.Item name="amount" label="Số tiền hoàn lại (VNĐ)" rules={[{ required: true, message: 'Vui lòng nhập số tiền hoàn!' }]}>
             <InputNumber 
               className="w-full" 
               min={1000} 
@@ -288,7 +295,29 @@ export default function BillingManagement() {
             />
           </Form.Item>
           
-          <Form.Item name="content" label="Lý do hoàn tiền" rules={[{ required: true }]}>
+          <Form.Item name="target_bank_code" label="Ngân hàng nhận" rules={[{ required: true, message: 'Vui lòng chọn ngân hàng nhận!' }]}>
+            <Select placeholder="Chọn ngân hàng nhận tiền...">
+              <Option value="VCB">Vietcombank (VCB)</Option>
+              <Option value="CTG">VietinBank (CTG)</Option>
+              <Option value="BIDV">BIDV (BIDV)</Option>
+              <Option value="TCB">Techcombank (TCB)</Option>
+              <Option value="MB">MBBank (MB)</Option>
+              <Option value="ACB">ACB (ACB)</Option>
+              <Option value="VPB">VPBank (VPB)</Option>
+              <Option value="STB">Sacombank (STB)</Option>
+              <Option value="HDB">HDBank (HDB)</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="target_account_no" label="Số tài khoản nhận" rules={[{ required: true, message: 'Vui lòng nhập số tài khoản nhận!' }]}>
+            <Input placeholder="Nhập số tài khoản ngân hàng..." />
+          </Form.Item>
+
+          <Form.Item name="target_account_name" label="Tên chủ tài khoản nhận (Không bắt buộc)">
+            <Input placeholder="Nhập tên chủ tài khoản (viết hoa không dấu, ví dụ: NGUYEN VAN A)..." />
+          </Form.Item>
+
+          <Form.Item name="content" label="Lý do hoàn tiền" rules={[{ required: true, message: 'Vui lòng nhập lý do hoàn tiền!' }]}>
             <Input.TextArea rows={2} placeholder="Nhập lý do hoàn tiền..." />
           </Form.Item>
 
