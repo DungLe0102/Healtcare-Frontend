@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Steps, Card, DatePicker, Select, Button, Form, Input, Typography, Tag, Spin, Result, App } from 'antd';
 import { getErrorMessage } from '@/utils/errorHandler';
-import { CalendarOutlined, InfoCircleOutlined, QrcodeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CalendarOutlined, InfoCircleOutlined, QrcodeOutlined, CheckCircleOutlined, SafetyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { patientApi } from '@/api/patient';
 import { doctorApi } from '@/api/doctor';
@@ -19,7 +19,7 @@ export default function BookingFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
-  
+
   // Data step 1
   const [departments, setDepartments] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -27,14 +27,14 @@ export default function BookingFlow() {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().add(1, 'day').format('YYYY-MM-DD'));
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null);
-  
+
   // Data step 2
   const [activeBHYT, setActiveBHYT] = useState<any | null>(null);
   const [formStep2] = Form.useForm();
-  
+
   // Data step 3 & 4
   const [appointmentData, setAppointmentData] = useState<any | null>(null);
-  
+
   useEffect(() => {
     // Check patient logged in
     const role = localStorage.getItem('user_role');
@@ -66,14 +66,14 @@ export default function BookingFlow() {
     try {
       const profile = await patientApi.getMyProfile();
       setPatientId(profile.patient_id);
-      
+
       // Get active BHYT if any (using list endpoint to avoid 404 error in console)
       try {
         const bhytList = await patientApi.getPatientBHYTList(profile.patient_id);
-        const active = bhytList.find((b: any) => 
-          b.is_active && 
-          b.check_status === 'VERIFIED' && 
-          dayjs().isBefore(dayjs(b.valid_to).endOf('day')) && 
+        const active = bhytList.find((b: any) =>
+          b.is_active &&
+          b.check_status === 'VERIFIED' &&
+          dayjs().isBefore(dayjs(b.valid_to).endOf('day')) &&
           dayjs().isAfter(dayjs(b.valid_from).startOf('day'))
         );
         setActiveBHYT(active || null);
@@ -116,7 +116,7 @@ export default function BookingFlow() {
 
   const handleBookAppointment = async (values: any) => {
     if (!patientId || !selectedSchedule) return;
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -125,9 +125,9 @@ export default function BookingFlow() {
         symptoms: values.symptoms,
         applied_bhyt_id: values.use_bhyt && activeBHYT ? activeBHYT.bhyt_id : undefined,
       };
-      
+
       const result = await appointmentApi.bookAppointment(payload);
-      
+
       // Nếu backend chưa trả thẳng vietqr_url, ta sẽ gọi API lấy mã QR
       if (result.billing_id && !result.vietqr_url) {
         try {
@@ -143,7 +143,7 @@ export default function BookingFlow() {
         console.error('Backend không trả về billing_id hoặc vietqr_url', result);
         result.vietqr_url = "ERROR";
       }
-      
+
       setAppointmentData(result);
       setCurrentStep(2);
       message.success('Đặt lịch thành công, vui lòng thanh toán.');
@@ -187,8 +187,8 @@ export default function BookingFlow() {
       <div className="flex gap-4 mb-6">
         <div className="flex-1">
           <Text strong>Chọn ngày khám:</Text>
-          <DatePicker 
-            className="w-full mt-2" 
+          <DatePicker
+            className="w-full mt-2"
             value={dayjs(selectedDate)}
             onChange={(d) => setSelectedDate(d ? d.format('YYYY-MM-DD') : '')}
             disabledDate={(current) => current && current < dayjs().startOf('day')}
@@ -196,10 +196,10 @@ export default function BookingFlow() {
         </div>
         <div className="flex-1">
           <Text strong>Chuyên khoa (Tùy chọn):</Text>
-          <Select 
+          <Select
             virtual={false}
-            className="w-full mt-2" 
-            allowClear 
+            className="w-full mt-2"
+            allowClear
             placeholder="Tất cả chuyên khoa"
             value={selectedDept}
             onChange={setSelectedDept}
@@ -216,9 +216,9 @@ export default function BookingFlow() {
         {availableSlots.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 mt-4">
             {availableSlots.map(item => (
-              <Card 
+              <Card
                 key={item.schedule_id}
-                hoverable 
+                hoverable
                 className={`cursor-pointer transition-all ${selectedSchedule?.schedule_id === item.schedule_id ? 'border-blue-500 bg-blue-50' : ''}`}
                 onClick={() => setSelectedSchedule(item)}
               >
@@ -274,7 +274,7 @@ export default function BookingFlow() {
         <Form.Item name="symptoms" label="Triệu chứng" rules={[{ required: true, message: 'Vui lòng mô tả triệu chứng' }]}>
           <TextArea rows={4} placeholder="Mô tả triệu chứng của bạn để bác sĩ có thể chuẩn bị tốt hơn" />
         </Form.Item>
-        
+
         {activeBHYT && (
           <Form.Item name="use_bhyt" valuePropName="checked">
             <Card size="small" className="border-blue-200 bg-blue-50">
@@ -300,44 +300,71 @@ export default function BookingFlow() {
     </div>
   );
 
-  const renderStep3 = () => (
-    <div className="mt-6 text-center max-w-md mx-auto">
-      <Title level={4}>Thanh toán phí khám bệnh</Title>
-      <Text className="text-gray-500 mb-6 block">Vui lòng dùng ứng dụng ngân hàng quét mã QR dưới đây. Bạn có 10 phút để thanh toán trước khi bị hủy lịch tự động.</Text>
-      
-      {appointmentData?.vietqr_url === "ERROR" ? (
-        <div className="h-64 flex flex-col items-center justify-center bg-red-50 text-red-500 rounded-xl mb-6 border border-red-200 p-4">
-           <InfoCircleOutlined className="text-3xl mb-2" />
-           <Text className="text-red-600 font-semibold">Lỗi kết nối đến cổng thanh toán VietQR.</Text>
-           <Text className="text-sm text-red-500 mt-2">Dịch vụ tạo mã QR đang tạm gián đoạn. Vui lòng sử dụng nút "Mô phỏng thanh toán" bên dưới để hoàn tất luồng đặt lịch.</Text>
-        </div>
-      ) : appointmentData?.vietqr_url ? (
-        <div className="bg-white p-4 rounded-xl shadow-sm inline-block mb-6 border">
-          <img src={appointmentData.vietqr_url} alt="VietQR" className="w-64 h-64 object-contain" />
-        </div>
-      ) : (
-        <div className="h-64 flex flex-col items-center justify-center bg-gray-100 rounded-xl mb-6">
-          <Spin />
-          <Text className="mt-4 text-gray-500">Đang khởi tạo mã QR...</Text>
-        </div>
-      )}
+  const renderStep3 = () => {
+    const total = appointmentData?.total_amount ?? 150000;
+    const bhytCovered = appointmentData?.bhyt_covered_amount ?? 0;
+    const patientPaid = appointmentData?.patient_paid_amount ?? total;
 
-      <div className="p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm mb-6 text-left">
-        <strong>Dành cho Demo:</strong> Bạn có thể sử dụng nút bên dưới để giả lập ngân hàng đã gửi Webhook thanh toán thành công.
+    return (
+      <div className="mt-6 text-center max-w-md mx-auto">
+        <Title level={4} style={{ fontWeight: 700 }}>Thanh toán phí khám bệnh</Title>
+        <Text className="text-gray-500 mb-6 block">Vui lòng dùng ứng dụng ngân hàng quét mã QR dưới đây. Bạn có 10 phút để thanh toán trước khi bị hủy lịch tự động.</Text>
+
+        <Card className="mb-6 rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50/20 text-left shadow-sm">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <Text className="text-gray-500">Giá khám gốc:</Text>
+              <Text strong className="text-gray-800">{total.toLocaleString('vi-VN')} đ</Text>
+            </div>
+            {bhytCovered > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <Text className="text-green-600 flex items-center">
+                  <SafetyOutlined className="mr-1" /> BHYT hỗ trợ (80%):
+                </Text>
+                <Text strong className="text-green-600">-{bhytCovered.toLocaleString('vi-VN')} đ</Text>
+              </div>
+            )}
+            <div className="pt-2 border-t border-dashed border-gray-200 flex justify-between items-center">
+              <Text strong className="text-gray-700">Số tiền cần thanh toán:</Text>
+              <Text strong className="text-lg text-red-600">{patientPaid.toLocaleString('vi-VN')} đ</Text>
+            </div>
+          </div>
+        </Card>
+
+        {appointmentData?.vietqr_url === "ERROR" ? (
+          <div className="h-64 flex flex-col items-center justify-center bg-red-50 text-red-500 rounded-xl mb-6 border border-red-200 p-4">
+            <InfoCircleOutlined className="text-3xl mb-2" />
+            <Text className="text-red-600 font-semibold">Lỗi kết nối đến cổng thanh toán VietQR.</Text>
+            <Text className="text-sm text-red-500 mt-2">Dịch vụ tạo mã QR đang tạm gián đoạn. Vui lòng sử dụng nút "Mô phỏng thanh toán" bên dưới để hoàn tất luồng đặt lịch.</Text>
+          </div>
+        ) : appointmentData?.vietqr_url ? (
+          <div className="bg-white p-4 rounded-xl shadow-sm inline-block mb-6 border">
+            <img src={appointmentData.vietqr_url} alt="VietQR" className="w-64 h-64 object-contain" />
+          </div>
+        ) : (
+          <div className="h-64 flex flex-col items-center justify-center bg-gray-100 rounded-xl mb-6">
+            <Spin />
+            <Text className="mt-4 text-gray-500">Đang khởi tạo mã QR...</Text>
+          </div>
+        )}
+
+        <div className="p-4 bg-yellow-50 rounded-lg text-yellow-800 text-sm mb-6 text-left">
+          <strong>Dành cho Demo:</strong> Bạn có thể sử dụng nút bên dưới để giả lập ngân hàng đã gửi Webhook thanh toán thành công.
+        </div>
+
+        <Button
+          type="primary"
+          size="large"
+          block
+          onClick={handleSimulatePayment}
+          loading={loading}
+          className="bg-green-600 hover:bg-green-700 border-green-600"
+        >
+          Mô phỏng thanh toán (Webhook)
+        </Button>
       </div>
-      
-      <Button 
-        type="primary" 
-        size="large" 
-        block 
-        onClick={handleSimulatePayment} 
-        loading={loading}
-        className="bg-green-600 hover:bg-green-700"
-      >
-        Mô phỏng thanh toán (Webhook)
-      </Button>
-    </div>
-  );
+    );
+  };
 
   const renderStep4 = () => (
     <div className="mt-6">

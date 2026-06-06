@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Typography, message, Space, Button, Modal } from 'antd';
+import { Table, Tag, Typography, message, Space, Button, Modal, Form, Input, Select } from 'antd';
 import { SyncOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { appointmentApi } from '@/api/appointment';
 import { patientApi } from '@/api/patient';
@@ -14,6 +14,12 @@ export default function PatientAppointmentHistory() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [patientId, setPatientId] = useState<string | null>(null);
+
+  // States for cancel form
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelForm] = Form.useForm();
+  const [selectedApptId, setSelectedApptId] = useState<string | null>(null);
+  const [isScheduledAppt, setIsScheduledAppt] = useState(false);
 
   useEffect(() => {
     fetchPatientAndAppointments();
@@ -81,31 +87,30 @@ export default function PatientAppointmentHistory() {
     }
   };
 
-  const handleCancel = (appointmentId: string) => {
-    Modal.confirm({
-      title: 'Xác nhận hủy lịch khám',
-      icon: <ExclamationCircleOutlined className="text-red-500" />,
-      content: (
-        <div className="mt-2">
-          <p>Bạn có chắc chắn muốn hủy cuộc hẹn này không?</p>
-          <p className="text-sm text-gray-500 mt-1">
-            * Đối với lịch đã thanh toán, hệ thống sẽ tự động tạo yêu cầu hoàn tiền.
-          </p>
-        </div>
-      ),
-      okText: 'Xác nhận hủy',
-      okType: 'danger',
-      cancelText: 'Quay lại',
-      onOk: async () => {
-        try {
-          await appointmentApi.cancelAppointment(appointmentId);
-          message.success('Hủy cuộc hẹn thành công');
-          fetchPatientAndAppointments();
-        } catch (error: any) {
-          message.error(getErrorMessage(error, 'Không thể hủy cuộc hẹn'));
-        }
-      }
-    });
+  const handleCancelClick = (record: any) => {
+    setSelectedApptId(record.appointment_id);
+    setIsScheduledAppt(record.status === 'SCHEDULED');
+    cancelForm.resetFields();
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCancelSubmit = async (values: any) => {
+    if (!selectedApptId) return;
+    try {
+      const refundData = isScheduledAppt ? {
+        refund_bank_code: values.refund_bank_code,
+        refund_account_no: values.refund_account_no,
+        refund_account_name: values.refund_account_name,
+        refund_reason: values.refund_reason,
+      } : undefined;
+
+      await appointmentApi.cancelAppointment(selectedApptId, refundData);
+      message.success('Hủy cuộc hẹn thành công');
+      setIsCancelModalOpen(false);
+      fetchPatientAndAppointments();
+    } catch (error: any) {
+      message.error(getErrorMessage(error, 'Không thể hủy cuộc hẹn'));
+    }
   };
 
   const columns = [
@@ -156,7 +161,7 @@ export default function PatientAppointmentHistory() {
               type="link" 
               danger 
               icon={<CloseCircleOutlined />} 
-              onClick={() => handleCancel(record.appointment_id)}
+              onClick={() => handleCancelClick(record)}
             >
               Hủy lịch
             </Button>
@@ -181,6 +186,86 @@ export default function PatientAppointmentHistory() {
         loading={loading}
         pagination={{ pageSize: 5 }}
       />
+
+      <Modal
+        title="Xác nhận hủy lịch khám"
+        open={isCancelModalOpen}
+        onCancel={() => setIsCancelModalOpen(false)}
+        footer={null}
+        forceRender
+      >
+        <div className="mb-4">
+          <Text>Bạn có chắc chắn muốn hủy cuộc hẹn này không?</Text>
+          {isScheduledAppt && (
+            <div className="bg-yellow-50 p-3 mt-2 rounded border border-yellow-200">
+              <Text className="text-yellow-800 text-xs">
+                Lịch này đã được thanh toán. Vui lòng điền thông tin tài khoản ngân hàng để hệ thống ghi nhận yêu cầu hoàn tiền.
+              </Text>
+            </div>
+          )}
+        </div>
+        <Form form={cancelForm} layout="vertical" onFinish={handleCancelSubmit}>
+          {isScheduledAppt && (
+            <>
+              <Form.Item 
+                name="refund_bank_code" 
+                label="Ngân hàng nhận hoàn tiền" 
+                rules={[{ required: true, message: 'Vui lòng chọn ngân hàng!' }]}
+              >
+                <Select placeholder="Chọn ngân hàng nhận tiền...">
+                  <Select.Option value="VCB">Vietcombank (VCB)</Select.Option>
+                  <Select.Option value="CTG">VietinBank (CTG)</Select.Option>
+                  <Select.Option value="BIDV">BIDV (BIDV)</Select.Option>
+                  <Select.Option value="TCB">Techcombank (TCB)</Select.Option>
+                  <Select.Option value="MB">MBBank (MB)</Select.Option>
+                  <Select.Option value="ACB">ACB (ACB)</Select.Option>
+                  <Select.Option value="VPB">VPBank (VPB)</Select.Option>
+                  <Select.Option value="STB">Sacombank (STB)</Select.Option>
+                  <Select.Option value="HDB">HDBank (HDB)</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item 
+                name="refund_account_no" 
+                label="Số tài khoản nhận" 
+                rules={[{ required: true, message: 'Vui lòng nhập số tài khoản!' }]}
+              >
+                <Input placeholder="Nhập số tài khoản ngân hàng..." />
+              </Form.Item>
+
+              <Form.Item 
+                name="refund_account_name" 
+                label="Tên chủ tài khoản (viết hoa không dấu)"
+                rules={[{ required: true, message: 'Vui lòng nhập tên chủ tài khoản!' }]}
+              >
+                <Input placeholder="Nhập tên chủ tài khoản, ví dụ: NGUYEN VAN A..." />
+              </Form.Item>
+
+              <Form.Item 
+                name="refund_reason" 
+                label="Lý do hủy lịch" 
+                rules={[{ required: true, message: 'Vui lòng nhập lý do hủy lịch!' }]}
+              >
+                <Input.TextArea rows={2} placeholder="Nhập lý do hủy..." />
+              </Form.Item>
+            </>
+          )}
+
+          {!isScheduledAppt && (
+            <Form.Item 
+              name="refund_reason" 
+              label="Lý do hủy lịch (không bắt buộc)" 
+            >
+              <Input.TextArea rows={2} placeholder="Nhập lý do hủy..." />
+            </Form.Item>
+          )}
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button onClick={() => setIsCancelModalOpen(false)}>Quay lại</Button>
+            <Button type="primary" danger htmlType="submit">Xác nhận hủy lịch</Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }

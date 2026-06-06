@@ -15,6 +15,12 @@ export interface BillingResponse {
   bhyt_covered_amount: number;
   patient_paid_amount: number;
   billing_status: string;
+  refund_bank_code?: string;
+  refund_account_no?: string;
+  refund_account_name?: string;
+  refund_reason?: string;
+  patient_name?: string;
+  doctor_name?: string;
   created_at: string;
   updated_at: string;
   transactions?: PaymentResponse[];
@@ -101,6 +107,19 @@ export const billingApi = {
 
   getBillingByAppointment: async (appointmentId: string): Promise<BillingResponse> => {
     const response = await api.get(`/api/v1/appointments/${appointmentId}/billing`);
+    return response.data;
+  },
+
+  listBillings: async (params?: {
+    status?: string;
+    patient_name?: string;
+    doctor_name?: string;
+    start_date?: string;
+    end_date?: string;
+    skip?: number;
+    limit?: number;
+  }): Promise<BillingResponse[]> => {
+    const response = await api.get('/api/v1/billing', { params });
     return response.data;
   },
 

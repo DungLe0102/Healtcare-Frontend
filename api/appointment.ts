@@ -26,6 +26,9 @@ export interface Appointment {
 export interface AppointmentResponse extends Appointment {
   vietqr_url?: string;
   transaction_id?: string;
+  total_amount?: number;
+  bhyt_covered_amount?: number;
+  patient_paid_amount?: number;
 }
 
 export const appointmentApi = {
@@ -103,8 +106,13 @@ export const appointmentApi = {
   },
 
   // 10. Bệnh nhân hủy cuộc hẹn
-  cancelAppointment: async (appointmentId: string): Promise<any> => {
-    const response = await api.post(`/api/v1/appointments/${appointmentId}/cancel`);
+  cancelAppointment: async (appointmentId: string, refundData?: {
+    refund_bank_code?: string;
+    refund_account_no?: string;
+    refund_account_name?: string;
+    refund_reason?: string;
+  }): Promise<any> => {
+    const response = await api.post(`/api/v1/appointments/${appointmentId}/cancel`, refundData);
     return response.data;
   }
 };
