@@ -43,6 +43,8 @@ export interface PaymentResponse {
   payment_method: string;
   amount: number;
   transaction_status: string;
+  gateway_reference_id?: string;
+  payment_date?: string;
   reference_number?: string;
   created_at: string;
 }
